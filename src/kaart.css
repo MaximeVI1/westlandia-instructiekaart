@@ -291,3 +291,61 @@ body {
   font-size: 7.5pt;
   color: var(--inkt-zacht);
 }
+
+/* ---------- presentatie: dia's van 16:9 (13,33 × 7,5 duim, zoals in PowerPoint) ---------- */
+
+.dia {
+  position: relative;
+  width: 338.67mm;
+  height: 190.5mm;
+  padding: 9mm 13mm 6mm;
+  background: #fff;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-size: 10.5pt;
+  line-height: 1.3;
+}
+
+.dia-kop { display: flex; align-items: center; justify-content: space-between; gap: 10mm; }
+.dia-kop-titel { min-width: 0; border-left: 1.4mm solid var(--groen); padding: .2mm 0 .4mm 3.6mm; }
+.dia-kop-titel .kop-soort { display: block; margin: 0 0 .6mm; font-size: 7.5pt; }
+.dia-kop-titel strong {
+  display: block;
+  overflow: hidden;
+  font-size: 15pt;
+  line-height: 1.15;
+  font-weight: 750;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.dia-kop .kop-logo { height: 8mm; flex: none; }
+
+/* de vensters krijgen hier een vergroting (zoom) waarmee ze de dia zo goed mogelijk vullen */
+.dia-midden { flex: 1; min-height: 0; margin-top: 6mm; overflow: hidden; }
+.dia-vensters { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 4mm; }
+.dia-vensters.n2, .dia-vensters.n4 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.dia-vensters.n3, .dia-vensters.n5, .dia-vensters.n6 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.dia .picto-lijst { grid-template-columns: repeat(auto-fit, minmax(52mm, 1fr)); }
+
+/* titeldia */
+.titeldia { padding: 13mm 18mm 17mm; }
+.titeldia::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 5mm;
+  background: linear-gradient(90deg, var(--groen) 0 72%, var(--paars) 72% 100%);
+}
+.titeldia .kop-logo { height: 14mm; }
+.titeldia .kop-id { padding: 2.4mm 5mm; }
+.titeldia .velden dt { font-size: 7.5pt; }
+.titeldia .velden dd { font-size: 12pt; }
+.titeldia-titel { margin: auto 0; border-left-width: 2.4mm; padding: 1.5mm 0 2mm 7mm; }
+.titeldia .kop-titel .kop-soort { margin-bottom: 3mm; font-size: 12pt; }
+.titeldia .kop-titel h1 { max-width: 270mm; font-size: 40pt; line-height: 1.08; }
+.titeldia-doel { max-width: 250mm; margin: 5mm 0 0; font-size: 15pt; line-height: 1.35; color: var(--inkt-zacht); }
+.titeldia-meta { gap: 0; }
+.titeldia-meta > div { padding: 0 6mm; }

@@ -97,13 +97,13 @@ window.Instructiekaart = (function () {
           el('span', { text: kop.doelstelling }))));
   }
 
-  function tekenVoet(kop, nummer, totaal, vermelding) {
+  function tekenVoet(kop, nummer, totaal, vermelding, woord) {
     const kenmerk = ['Westlandia', kop.code, kop.versie && 'versie ' + kop.versie, datum(kop.datum)]
       .filter(Boolean).join(' · ');
     return el('footer', { class: 'voet' },
       el('span', { text: kenmerk }),
       vermelding && el('span', { class: 'voet-bron', text: 'Figuren: ' + vermelding }),
-      el('span', { text: 'Pagina ' + nummer + '/' + totaal }));
+      el('span', { text: (woord || 'Pagina') + ' ' + nummer + '/' + totaal }));
   }
 
   /* ---------- inhoud van een venster ---------- */
@@ -139,9 +139,10 @@ window.Instructiekaart = (function () {
       b.bijschrift && el('figcaption', { text: b.bijschrift }));
   }
 
-  /* Een lijst punten; elk punt is een korte tekst met eventueel beelden eronder. */
-  function tekenPunten(items, klasse) {
-    const lijst = el(klasse === 'stappen' ? 'ol' : 'ul', { class: 'punten ' + klasse });
+  /* Een lijst punten; elk punt is een korte tekst met eventueel beelden eronder.
+     `start`: aantal stappen die al op een vorige dia stonden, zodat de nummering doorloopt. */
+  function tekenPunten(items, klasse, start) {
+    const lijst = el(klasse === 'stappen' ? 'ol' : 'ul', { class: 'punten ' + klasse, style: start ? 'counter-reset: stap ' + start : null });
     for (const item of items || []) {
       if (item.los) { lijst.append(losseTekst(item)); continue; }
       const beelden = item.beelden || [];
@@ -163,7 +164,7 @@ window.Instructiekaart = (function () {
   const TYPES = {
     pictogrammen: tekenPictogrammen,
     punten: (v) => tekenPunten(v.items, 'kaal'),
-    stappen: (v) => tekenPunten(v.items, 'stappen'),
+    stappen: (v) => tekenPunten(v.items, 'stappen', v.startNummer),
     'doen-niet-doen': tekenDoenNietDoen,
   };
 
@@ -361,5 +362,182 @@ window.Instructiekaart = (function () {
     return { paginas: paginas.length };
   }
 
-  return { toon, meet, ontbrekendeMaten, el, datum };
+  /* ---------- presentatie: dezelfde vensters op dia's van 16:9 ---------- */
+
+  /* Welke vensters samen op een dia staan. Zonder eigen indeling krijgt elk venster een eigen dia, in de
+     volgorde van de kaart. Een eigen indeling (kaart.presentatie.dias: lijsten van venster-id's) bepaalt
+     de groepen en hun volgorde; een venster dat er nog niet in staat (bv. net toegevoegd), komt op een
+     eigen dia na de dia van het venster dat er op de kaart voor staat. */
+  function diaIndeling(kaart) {
+    const vensters = kaart.vensters || [];
+    const perId = new Map(vensters.map((v) => [v.id, v]));
+    const eigen = kaart.presentatie && Array.isArray(kaart.presentatie.dias) ? kaart.presentatie.dias : [];
+    const geplaatst = new Set();
+    const dias = [];
+    for (const ids of eigen) {
+      if (!Array.isArray(ids)) continue;
+      const dia = [];
+      for (const id of ids) {
+        const v = perId.get(id);
+        if (v && !geplaatst.has(v)) { dia.push(v); geplaatst.add(v); }
+      }
+      if (dia.length) dias.push(dia);
+    }
+    let vorige = -1;
+    for (const v of vensters) {
+      if (geplaatst.has(v)) { vorige = dias.findIndex((d) => d.includes(v)); continue; }
+      dias.splice(++vorige, 0, [v]);
+      geplaatst.add(v);
+    }
+    return dias;
+  }
+
+  /* Hoe groot de vensters op een dia mogen worden: zo groot als past, tot DIA.max. Een venster alleen
+     op een dia gaat niet kleiner dan DIA.alleen; is het dan nog te lang, dan loopt het door op een
+     volgende dia. Vensters die je samen op één dia zette, mogen kleiner, tot DIA.samen. */
+  const DIA = { max: 1.75, alleen: 1.25, samen: 0.85 };
+
+  /* Een venster bestaat uit eenheden die over dia's verdeeld kunnen worden: punten, stappen,
+     pictogrammen, of bij doen / niet doen eerst de wel- en dan de niet-punten. */
+  const eenheden = (v) => (v.type === 'doen-niet-doen' ? (v.wel || []).length + (v.niet || []).length : (v.items || []).length);
+
+  function deelVan(v, van, tot, nummer, delen) {
+    const deel = Object.assign({}, v);
+    if (delen > 1) deel.titel = [v.titel, '(' + nummer + '/' + delen + ')'].filter(Boolean).join(' ');
+    if (v.type === 'doen-niet-doen') {
+      const wel = v.wel || [];
+      deel.wel = wel.slice(Math.min(van, wel.length), Math.min(tot, wel.length));
+      deel.niet = (v.niet || []).slice(Math.max(van - wel.length, 0), Math.max(tot - wel.length, 0));
+    } else {
+      deel.items = (v.items || []).slice(van, tot);
+      if (v.type === 'stappen') deel.startNummer = (v.items || []).slice(0, van).filter((p) => !p.los).length;
+    }
+    if (van > 0) deel.illustratie = null;   // de grote figuur alleen bij het eerste deel
+    return deel;
+  }
+
+  function tekenTitelDia(kop) {
+    const extra = [['Geldig voor', kop.geldigVoor], ['Toepassingsgebied', kop.toepassingsgebied], ['Eigenaar', kop.eigenaar]]
+      .filter(([, waarde]) => waarde);
+    return el('article', { class: 'dia titeldia' },
+      el('div', { class: 'kop-boven' },
+        beeld(bib.logo, 'Westlandia', 'kop-logo'),
+        el('dl', { class: 'velden kop-id' },
+          veld('Document', kop.code, 'veld-code'),
+          veld('Versie', kop.versie),
+          veld('Datum', datum(kop.datum)))),
+      el('div', { class: 'kop-titel titeldia-titel' },
+        kop.soort && el('p', { class: 'kop-soort', text: kop.soort }),
+        el('h1', { text: kop.titel }),
+        kop.doelstelling && el('p', { class: 'titeldia-doel', text: kop.doelstelling })),
+      extra.length ? el('dl', { class: 'velden titeldia-meta' }, ...extra.map(([naam, waarde]) => veld(naam, waarde))) : null);
+  }
+
+  function maakDia(kop, vensters, groep, vermelding) {
+    const lijst = el('div', { class: 'dia-vensters n' + Math.min(vensters.length, 6) }, ...vensters.map(tekenVenster));
+    const midden = el('div', { class: 'dia-midden' }, lijst);
+    const voet = tekenVoet(kop, 0, 0, vermelding, 'Dia');   // het nummer komt er pas op het einde in
+    const dia = el('article', { class: 'dia', 'data-groep': groep },
+      el('header', { class: 'dia-kop' },
+        el('div', { class: 'dia-kop-titel' },
+          kop.soort && el('span', { class: 'kop-soort', text: kop.soort }),
+          el('strong', { text: kop.titel })),
+        beeld(bib.logo, 'Westlandia', 'kop-logo')),
+      midden, voet);
+    return { el: dia, lijst, midden, voet };
+  }
+
+  /* Past de inhoud bij deze vergroting op de dia? */
+  function past(dia, z) {
+    dia.lijst.style.zoom = z;
+    return dia.lijst.getBoundingClientRect().height <= dia.midden.getBoundingClientRect().height + 0.5;
+  }
+
+  /* Zoekt de grootste vergroting tussen min en DIA.max waarbij alles op de dia past. */
+  function pasIn(dia, min) {
+    dia.el.classList.remove('te-vol');
+    if (past(dia, DIA.max)) return DIA.max;
+    if (!past(dia, min)) { dia.el.classList.add('te-vol'); return min; }
+    let laag = min;
+    let hoog = DIA.max;
+    for (let i = 0; i < 6; i++) {
+      const z = (laag + hoog) / 2;
+      if (past(dia, z)) laag = z; else hoog = z;
+    }
+    past(dia, laag);
+    return laag;
+  }
+
+  /* De dia('s) voor één venster alleen: één dia als het leesbaar past, anders verdeeld over
+     zoveel dia's als nodig, zo gelijk mogelijk, allemaal even groot. */
+  function diasVoorVenster(v, kop, groep, vermelding, doel) {
+    const n = eenheden(v);
+    const probeer = (van, tot, nummer, delen) => {
+      const dia = maakDia(kop, [deelVan(v, van, tot, nummer, delen)], groep, vermelding);
+      doel.append(dia.el);
+      return dia;
+    };
+    const heel = probeer(0, n, 1, 1);
+    if (n < 2 || past(heel, DIA.alleen)) { pasIn(heel, DIA.samen); return [heel]; }
+    heel.el.remove();
+
+    /* hoeveel dia's nodig zijn: telkens zoveel eenheden als er leesbaar op passen */
+    const grenzen = [];
+    for (let van = 0; van < n;) {
+      let laag = van + 1;
+      let hoog = n;
+      while (laag < hoog) {
+        const tot = Math.ceil((laag + hoog) / 2);
+        const dia = probeer(van, tot, 1, 2);
+        const ok = past(dia, DIA.alleen);
+        dia.el.remove();
+        if (ok) laag = tot; else hoog = tot - 1;
+      }
+      grenzen.push(laag);
+      van = laag;
+    }
+
+    /* liefst even veel per dia; past dat niet, dan zoals hierboven gevonden */
+    const k = grenzen.length;
+    const maak = (eindes) => {
+      let van = 0;
+      return eindes.map((tot, i) => { const dia = probeer(van, tot, i + 1, k); van = tot; return dia; });
+    };
+    let dias = maak(Array.from({ length: k }, (_, i) => Math.round((i + 1) * n / k)));
+    if (!dias.every((dia) => past(dia, DIA.alleen))) {
+      for (const dia of dias) dia.el.remove();
+      dias = maak(grenzen);
+    }
+    const passend = dias.map((dia) => [dia, pasIn(dia, DIA.samen)]).filter(([dia]) => !dia.el.classList.contains('te-vol'));
+    const z = Math.min(...passend.map(([, zoom]) => zoom));
+    for (const [dia] of passend) past(dia, z);
+    return dias;
+  }
+
+  /* Tekent de presentatie in `doel`: een titeldia en dan de vensters. Geeft het aantal dia's, de gebruikte
+     indeling (lijsten van venster-id's) en hoeveel dia's te vol zijn. */
+  function toonPresentatie(kaart, bibliotheek, doel) {
+    bib = bibliotheek;
+    const kop = kaart.kop || {};
+    const vermelding = vermeldingen(kaart).join(' · ');
+    const indeling = diaIndeling(kaart);
+    doel.replaceChildren(tekenTitelDia(kop));
+    const dias = [];
+    indeling.forEach((groep, i) => {
+      if (groep.length === 1) { dias.push(...diasVoorVenster(groep[0], kop, i, vermelding, doel)); return; }
+      const dia = maakDia(kop, groep, i, vermelding);
+      doel.append(dia.el);
+      pasIn(dia, DIA.samen);
+      dias.push(dia);
+    });
+    const totaal = dias.length + 1;
+    dias.forEach((dia, i) => dia.el.replaceChild(tekenVoet(kop, i + 2, totaal, vermelding, 'Dia'), dia.voet));
+    return {
+      dias: totaal,
+      indeling: indeling.map((groep) => groep.map((v) => v.id)),
+      teVol: dias.filter((dia) => dia.el.classList.contains('te-vol')).length,
+    };
+  }
+
+  return { toon, toonPresentatie, meet, ontbrekendeMaten, el, datum };
 })();

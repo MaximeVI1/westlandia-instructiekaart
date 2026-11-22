@@ -76,6 +76,8 @@
   const meldingEl = document.getElementById('melding');
   const bestandKiezer = document.getElementById('bestand-kiezen');
   const docxKiezer = document.getElementById('docx-kiezen');
+  const uitleg = document.getElementById('dia-uitleg');
+  const automatischKnop = document.getElementById('dia-automatisch');
 
   const staat = {
     kaart: null,
@@ -158,7 +160,14 @@
       while (gezien.has(v.id)) v.id = nieuwId();
       gezien.add(v.id);
     }
-    return { schema: 1, kop, vensters };
+    const uit = { schema: 1, kop, vensters };
+    /* eigen indeling van de presentatie: welke vensters samen op een dia staan */
+    const dias = bron.presentatie && Array.isArray(bron.presentatie.dias) ? bron.presentatie.dias : [];
+    const schoon = dias.filter(Array.isArray)
+      .map((dia) => dia.filter((id) => typeof id === 'string' && gezien.has(id)))
+      .filter((dia) => dia.length);
+    if (schoon.length) uit.presentatie = { dias: schoon };
+    return uit;
   }
 
   function vandaag() {
@@ -273,11 +282,22 @@
   function tekenVoorbeeld() {
     voorbeeldGepland = false;
     const ongemeten = K.ontbrekendeMaten(staat.kaart, bib);
-    const uit = K.toon(staat.kaart, bib, bladen);
-    paginasEl.textContent = uit.paginas + ' pagina’s';
-    paginasEl.hidden = uit.paginas < 2;
     const kop = staat.kaart.kop;
-    document.title = [kop.code, kop.titel].filter(Boolean).join(' – ') || 'Instructiekaart';   // ook de voorgestelde naam van de pdf
+    const naam = [kop.code, kop.titel].filter(Boolean).join(' – ') || 'Instructiekaart';
+    if (weergave === 'presentatie') {
+      const uit = K.toonPresentatie(staat.kaart, bib, bladen);
+      indeling = uit.indeling;
+      tussenstroken();
+      paginasEl.textContent = uit.dias + ' dia’s';
+      paginasEl.hidden = false;
+      document.title = naam + ' – presentatie';   // ook de voorgestelde naam van de pdf
+      automatischKnop.disabled = !staat.kaart.presentatie;
+    } else {
+      const uit = K.toon(staat.kaart, bib, bladen);
+      paginasEl.textContent = uit.paginas + ' pagina’s';
+      paginasEl.hidden = uit.paginas < 2;
+      document.title = naam;
+    }
     schaal();
     controleerPasvorm();
     /* Beelden waarvan de maat nog niet gekend was: eerst opmeten, dan klopt de verdeling over de pagina's zeker. */
@@ -300,7 +320,7 @@
     const blad = bladen.firstElementChild;
     if (!blad) return;
     const breed = (voorbeeld.clientWidth - 48) / blad.offsetWidth;
-    const hoog = (voorbeeld.clientHeight - 48) / blad.offsetHeight;
+    const hoog = (voorbeeld.clientHeight - 48 - (uitleg.hidden ? 0 : uitleg.offsetHeight + 16)) / blad.offsetHeight;
     const z = Math.max(0.2, zoom === 'blad' ? Math.min(breed, hoog) : Math.min(1.1, breed));
     bladen.style.transform = 'scale(' + z + ')';
     kader.style.width = bladen.offsetWidth * z + 'px';
@@ -311,12 +331,80 @@
      dan een pagina past nergens: dan valt de onderkant weg, en daar waarschuwen we voor. */
   function controleerPasvorm() {
     let teVol = false;
-    for (const blad of bladen.children) {
-      const vol = blad.scrollHeight > blad.clientHeight + 1;
-      blad.classList.toggle('te-vol', vol);
-      teVol = teVol || vol;
+    if (weergave === 'presentatie') {
+      teVol = !!bladen.querySelector('.dia.te-vol');   // dat bepaalt K.toonPresentatie bij het inpassen
+      teVolEl.textContent = 'Een dia is te vol';
+      teVolEl.title = 'Zet een van de vensters op die dia op een eigen dia, of maak de tekst korter.';
+    } else {
+      for (const blad of bladen.querySelectorAll('.blad')) {
+        const vol = blad.scrollHeight > blad.clientHeight + 1;
+        blad.classList.toggle('te-vol', vol);
+        teVol = teVol || vol;
+      }
+      teVolEl.textContent = 'Een venster is te groot voor één pagina';
+      teVolEl.title = '';
     }
     teVolEl.hidden = !teVol;
+  }
+
+  /* ---------- kaart of presentatie ---------- */
+
+  let weergave = 'kaart';
+  let indeling = [];   // welke vensters samen op een dia staan, zoals laatst getekend
+  const papier = document.head.appendChild(document.createElement('style'));
+
+  function zetWeergave(keuze) {
+    weergave = keuze === 'presentatie' ? 'presentatie' : 'kaart';
+    const dias = weergave === 'presentatie';
+    for (const b of document.querySelectorAll('[data-weergave]')) b.setAttribute('aria-pressed', String(b.dataset.weergave === weergave));
+    bladen.classList.toggle('dias', dias);
+    uitleg.hidden = !dias;
+    papier.textContent = dias ? '@page { size: 338.67mm 190.5mm; margin: 0; }' : '';
+    actieKnop('afdrukken').title = dias ? 'De presentatie afdrukken of opslaan als pdf (Ctrl+P)' : 'Afdrukken of opslaan als pdf (Ctrl+P)';
+    voorbeeld.scrollTop = 0;
+    tekenVoorbeeld();
+  }
+
+  /* Stroken tussen de dia's: wie er een venster op loslaat, geeft het een eigen dia op die plek.
+     Dia's van één venster dat over meer dia's doorloopt, krijgen er geen strook tussen. */
+  function tussenstroken() {
+    const strook = (plek) => K.el('div', { class: 'dia-tussen', 'data-plek': plek, text: 'Hier als aparte dia' });
+    let vorige = null;
+    for (const dia of bladen.querySelectorAll('.dia[data-groep]')) {
+      if (dia.dataset.groep !== vorige) dia.before(strook(Number(dia.dataset.groep)));
+      vorige = dia.dataset.groep;
+      for (const v of dia.querySelectorAll('.venster[data-id]')) v.draggable = true;
+      for (const img of dia.querySelectorAll('img')) img.draggable = false;   // zo versleep je het venster, niet een foto
+    }
+    bladen.append(strook(indeling.length));
+  }
+
+  /* Zet venster `id` op een andere dia (doel.groep, voor of na doel.venster) of op een eigen,
+     nieuwe dia (doel.plek: de plaats tussen de dia's). */
+  function zetOpDia(id, doel) {
+    const dias = indeling.map((dia) => dia.slice());
+    const bron = dias.find((dia) => dia.includes(id));
+    if (!bron) return;
+    const na = doel.strook ? dias[doel.plek - 1] || null : null;
+    const doelDia = doel.strook ? null : dias[doel.groep];
+    bron.splice(bron.indexOf(id), 1);
+    if (doelDia) {
+      const plek = doel.venster ? doelDia.indexOf(doel.venster.dataset.id) + (doel.na ? 1 : 0) : doelDia.length;
+      doelDia.splice(plek, 0, id);
+    } else {
+      dias.splice(na ? dias.indexOf(na) + 1 : 0, 0, [id]);
+    }
+    const nieuw = dias.filter((dia) => dia.length);
+    if (JSON.stringify(nieuw) === JSON.stringify(indeling)) return;
+    const vanzelf = JSON.stringify(nieuw) === JSON.stringify(staat.kaart.vensters.map((v) => [v.id]));
+    wijzig(null, () => {
+      if (vanzelf) delete staat.kaart.presentatie;
+      else staat.kaart.presentatie = { dias: nieuw };
+    });
+  }
+
+  function automatischIndelen() {
+    if (staat.kaart.presentatie) wijzig(null, () => { delete staat.kaart.presentatie; });
   }
 
   /* ---------- bouwstenen van het formulier ---------- */
@@ -1109,6 +1197,69 @@
     navigator.serviceWorker.register('sw.js').catch(() => {});
   }
 
+  /* ---------- presentatie: vensters naar een andere dia slepen ---------- */
+
+  const SLEEPTYPE = 'application/x-instructiekaart-venster';
+  let sleepVenster = null;
+
+  function wisDoel() {
+    for (const e of bladen.querySelectorAll('.doel, .voeg-voor, .voeg-na')) e.classList.remove('doel', 'voeg-voor', 'voeg-na');
+  }
+
+  function eindeSleep() {
+    sleepVenster = null;
+    wisDoel();
+    bladen.classList.remove('sleept');
+    for (const e of bladen.querySelectorAll('.gesleept')) e.classList.remove('gesleept');
+  }
+
+  /* Waar het venster terechtkomt als je het hier loslaat. */
+  function sleepDoel(e) {
+    const strook = e.target.closest('.dia-tussen');
+    if (strook) return { strook, plek: Number(strook.dataset.plek) };
+    const dia = e.target.closest('.dia[data-groep]');
+    if (!dia) return null;
+    const doel = { dia, groep: Number(dia.dataset.groep) };
+    const venster = e.target.closest('.venster[data-id]');
+    if (venster && venster.dataset.id !== sleepVenster) {
+      const r = venster.getBoundingClientRect();
+      doel.venster = venster;
+      doel.na = e.clientX > r.left + r.width / 2;
+    }
+    return doel;
+  }
+
+  bladen.addEventListener('dragstart', (e) => {
+    const venster = weergave === 'presentatie' && e.target.closest && e.target.closest('.dia .venster[data-id]');
+    if (!venster) return;
+    sleepVenster = venster.dataset.id;
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData(SLEEPTYPE, sleepVenster);
+    bladen.classList.add('sleept');
+    for (const v of bladen.querySelectorAll('.venster[data-id="' + sleepVenster + '"]')) v.classList.add('gesleept');
+  });
+  bladen.addEventListener('dragover', (e) => {
+    if (!sleepVenster) return;
+    const doel = sleepDoel(e);
+    wisDoel();
+    if (!doel) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (doel.strook) doel.strook.classList.add('doel');
+    else if (doel.venster) doel.venster.classList.add(doel.na ? 'voeg-na' : 'voeg-voor');
+    else doel.dia.classList.add('doel');
+  });
+  bladen.addEventListener('drop', (e) => {
+    if (!sleepVenster) return;
+    e.preventDefault();
+    const id = sleepVenster;
+    const doel = sleepDoel(e);
+    eindeSleep();
+    if (doel) zetOpDia(id, doel);
+  });
+  bladen.addEventListener('dragend', eindeSleep);
+  automatischKnop.addEventListener('click', automatischIndelen);
+
   /* ---------- gebeurtenissen ---------- */
 
   const ACTIES = {
@@ -1135,7 +1286,7 @@
   /* Klik op een onderdeel van het blad om het in het formulier te openen. */
   kader.addEventListener('click', (e) => {
     const venster = e.target.closest('.venster[data-id]');
-    const id = venster ? venster.dataset.id : (e.target.closest('.kop') ? 'kop' : '');
+    const id = venster ? venster.dataset.id : (e.target.closest('.kop, .titeldia, .dia-kop') ? 'kop' : '');
     if (!id) return;
     staat.open = new Set([id]);
     tekenFormulier();
@@ -1171,6 +1322,10 @@
   window.addEventListener('load', controleerPasvorm);
   kader.addEventListener('load', controleerPasvorm, true);   // beelden die pas later hun grootte kennen
   new ResizeObserver(schaal).observe(voorbeeld);
+  document.querySelector('.weergave').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-weergave]');
+    if (b && b.dataset.weergave !== weergave) zetWeergave(b.dataset.weergave);
+  });
   document.querySelector('.zoom').addEventListener('click', (e) => {
     const b = e.target.closest('[data-zoom]');
     if (b) zetZoom(b.dataset.zoom);
@@ -1194,6 +1349,7 @@
     actieKnop('opslaan-als').title = 'Opslaan onder een andere naam: in deze browser wordt het bestand gedownload';
   }
   zetZoom(zoom);
+  if (location.hash === '#presentatie') zetWeergave('presentatie');
 
-  K.editor = { staat, laad, alsTekst, nieuweKaart, importeerWord, geheugen };
+  K.editor = { staat, laad, alsTekst, nieuweKaart, importeerWord, geheugen, zetWeergave };
 })();

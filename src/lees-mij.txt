@@ -24,11 +24,28 @@ Word importeren   Een bestaande Word-kaart (.docx) omzetten naar een kaart.
 Opslaan           Bewaart de kaart als bestand (.json). Dat bestand is je kaart.
 Opslaan als       Bewaart de kaart onder een andere naam, bv. voor een nieuwe kaart
                   op basis van een bestaande.
-Afdrukken / pdf   Drukt de kaart af. Kies in het afdrukvenster "Opslaan als pdf"
+Kaart/Presentatie Kies wat je ziet en afdrukt: de kaart op A4, of dezelfde kaart
+                  als dia's om te presenteren.
+Afdrukken / pdf   Drukt af wat je ziet. Kies in het afdrukvenster "Opslaan als pdf"
                   om een pdf te maken.
 
 Links pas je de kaart aan, rechts zie je meteen het resultaat.
 Klik op een onderdeel van het blad om het links te openen.
+
+
+PRESENTATIE
+
+Klik bovenaan op "Presentatie". Je krijgt een titeldia en dan elk venster op een
+eigen dia, zo groot als past. Een lang venster loopt vanzelf door op een volgende
+dia.
+
+- Wil je twee vensters samen op één dia? Sleep het ene venster op de dia van het
+  andere. Laat je het los links of rechts van een venster, dan komt het daar.
+- Wil je een venster weer apart? Sleep het naar een strook tussen twee dia's.
+- "Automatisch indelen" zet alles terug: elk venster op een eigen dia.
+- Je indeling wordt mee opgeslagen in de kaart.
+- Kies daarna "Afdrukken / pdf" en "Opslaan als pdf": de pdf heeft het formaat
+  van een PowerPoint-dia (16:9) en kan je schermvullend tonen.
 
 
 GOED OM TE WETEN

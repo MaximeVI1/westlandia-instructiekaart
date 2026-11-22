@@ -24,12 +24,20 @@
     <span id="werkbalk-naam"></span>
     <span id="werkbalk-paginas" hidden></span>
     <span id="werkbalk-melding" hidden>Een venster is te groot voor één pagina</span>
+    <div class="weergave" role="group" aria-label="Wat je ziet en afdrukt">
+      <button type="button" data-weergave="kaart" aria-pressed="true" title="De kaart op A4">Kaart</button>
+      <button type="button" data-weergave="presentatie" aria-pressed="false" title="Dezelfde kaart als dia's om te presenteren">Presentatie</button>
+    </div>
     <button type="button" data-actie="installeren" title="Zet de editor als app op deze computer: een eigen icoon en venster, ook zonder internet" hidden>App installeren</button>
     <button type="button" class="hoofd" data-actie="afdrukken" title="Afdrukken of opslaan als pdf (Ctrl+P)">Afdrukken / pdf</button>
   </header>
   <div class="werkvlak">
     <aside class="paneel" id="formulier" aria-label="Kaart bewerken"></aside>
     <main class="voorbeeld" id="voorbeeld" aria-label="Voorbeeld van de kaart">
+      <div class="dia-uitleg" id="dia-uitleg" hidden>
+        <p>Sleep een venster naar een andere dia om ze samen te tonen, of naar een strook tussen twee dia's om er een aparte dia van te maken.</p>
+        <button type="button" id="dia-automatisch" title="Elk venster weer op een eigen dia, in de volgorde van de kaart">Automatisch indelen</button>
+      </div>
       <div class="blad-kader" id="blad-kader"><div class="bladen" id="bladen"></div></div>
       <div class="zoom" role="group" aria-label="Grootte van het voorbeeld">
         <button type="button" data-zoom="breedte">Groot</button>

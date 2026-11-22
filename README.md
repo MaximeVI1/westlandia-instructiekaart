@@ -9,6 +9,8 @@ Een editor voor veiligheidsinstructiekaarten: links vul je de kaart in, rechts z
 1. Open de link hierboven, bij voorkeur in Edge of Chrome, en zet hem bij je favorieten.
 2. Wil je een eigen icoon op je computer? Klik bovenaan op "App installeren". Daarna opent de editor in een eigen venster, ook zonder internet. Beheerdersrechten zijn niet nodig.
 
+Bovenaan kies je tussen **Kaart** (A4) en **Presentatie** (dia's van 16:9). In de presentatie staat elk venster op een eigen dia; sleep een venster naar een andere dia om ze samen te tonen. "Afdrukken / pdf" drukt af wat je ziet.
+
 De kaarten zelf blijven op je eigen computer of op de gedeelde schijf: je bewaart ze met "Opslaan" als `.json`-bestand en opent ze weer met "Openen". Er wordt niets naar de website gestuurd.
 
 ### Zonder internet of zonder website
@@ -21,7 +23,7 @@ Alleen Python 3 is nodig, zonder extra pakketten.
 
 ```
 python3 bouw.py          # bouwt instructiekaart.html
-python3 bouw.py --pdf    # maakt ook een pdf naast elke kaart in kaarten/ (vraagt Chrome of Edge)
+python3 bouw.py --pdf    # maakt een pdf van elke kaart in kaarten/, en van de presentatie (vraagt Chrome of Edge)
 python3 bouw.py --zip    # maakt Instructiekaart-editor.zip om door te geven
 python3 bouw.py --web    # maakt de map web/ voor de website
 ```

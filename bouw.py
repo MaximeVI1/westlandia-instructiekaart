@@ -3,8 +3,8 @@
 
 Gebruik:
     python3 bouw.py                              # bouwt instructiekaart.html (start met een lege kaart)
-    python3 bouw.py --pdf                        # maakt ook een pdf naast elke kaart in kaarten/
-    python3 bouw.py --pdf kaarten/A.json ...     # maakt een pdf naast elk opgegeven kaartbestand
+    python3 bouw.py --pdf                        # maakt ook een pdf naast elke kaart in kaarten/, en de presentatie
+    python3 bouw.py --pdf kaarten/A.json ...     # idem voor elk opgegeven kaartbestand
     python3 bouw.py --zip                        # maakt Instructiekaart-editor.zip om door te geven
     python3 bouw.py --web                        # maakt de map web/ voor de website (installeerbaar als app)
 
@@ -120,14 +120,15 @@ def bouw_pagina(kaart=None, web=False) -> str:
     return patroon.sub(lambda m: delen[m.group(0)], pagina)
 
 
-def maak_pdf(html: pathlib.Path, uit: pathlib.Path) -> None:
+def maak_pdf(html: pathlib.Path, uit: pathlib.Path, weergave: str = "") -> None:
+    """Drukt de pagina af naar pdf; met weergave "presentatie" de dia's in plaats van de kaart."""
     browser = next((b for b in BROWSERS if pathlib.Path(b).exists() or shutil.which(b)), None)
     if not browser:
         raise SystemExit("Geen Chrome of Edge gevonden; open de kaart in de editor en kies Afdrukken / pdf.")
     subprocess.run(
         [browser, "--headless=new", "--disable-gpu", "--no-pdf-header-footer",
          "--virtual-time-budget=5000",   # geeft de pagina de tijd om de beelden op te meten en de pagina's te verdelen
-         f"--print-to-pdf={uit}", html.as_uri()],
+         f"--print-to-pdf={uit}", html.as_uri() + (f"#{weergave}" if weergave else "")],
         check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=120,
     )
     print(f"{uit.relative_to(ROOT) if uit.is_relative_to(ROOT) else uit}  ({uit.stat().st_size / 1024:.0f} kB)")
@@ -177,7 +178,9 @@ def main() -> None:
             for pad in kaarten:
                 html = pathlib.Path(tijdelijk) / "kaart.html"
                 html.write_text(bouw_pagina(laad_kaart(pad)), encoding="utf-8")
-                maak_pdf(html, (pad / "kaart.pdf") if pad.is_dir() else pad.with_suffix(".pdf"))
+                basis = (pad / "kaart") if pad.is_dir() else pad.with_suffix("")
+                maak_pdf(html, basis.with_name(basis.name + ".pdf"))
+                maak_pdf(html, basis.with_name(basis.name + "-presentatie.pdf"), "presentatie")
     if "--zip" in sys.argv:
         maak_zip()
     if "--web" in sys.argv:

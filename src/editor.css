@@ -16,6 +16,7 @@
 
   .werkbalk {
     display: flex;
+    flex-wrap: wrap;   /* op een smal scherm loopt de balk door op een tweede regel */
     align-items: center;
     gap: 6px;
     padding: 8px 14px;
@@ -23,6 +24,7 @@
     border-bottom: 1px solid var(--lijn);
   }
   .werkbalk .merk { margin-right: 10px; color: var(--paars); font-size: 15px; }
+  @media (max-width: 1200px) { .werkbalk .merk { display: none; } }
   .werkbalk button {
     padding: 6px 11px;
     background: #fff;
@@ -36,6 +38,11 @@
   .werkbalk button.hoofd { background: var(--paars); border-color: var(--paars); color: #fff; }
   .werkbalk button.hoofd:hover { background: #7f3a7e; }
   .werkbalk .scheiding { width: 1px; align-self: stretch; margin: 2px 4px; background: var(--lijn); }
+  .weergave { display: flex; }
+  .werkbalk .weergave button { border-radius: 0; }
+  .werkbalk .weergave button:first-child { border-radius: 6px 0 0 6px; }
+  .werkbalk .weergave button:last-child { margin-left: -1px; border-radius: 0 6px 6px 0; }
+  .werkbalk .weergave button[aria-pressed="true"] { background: var(--vlak); border-color: #b7bdc6; box-shadow: inset 0 1px 2px rgba(20, 30, 45, .12); }
   #werkbalk-naam {
     flex: 1;
     min-width: 0;
@@ -69,6 +76,57 @@
   .blad.te-vol { box-shadow: 0 0 0 1.2mm var(--verbod); }
   .blad .kop, .blad .venster { cursor: pointer; }
   .blad .kop:hover, .blad .venster:hover { outline: .6mm solid rgba(109, 42, 108, .45); outline-offset: .8mm; }
+
+  /* presentatie: dia's onder elkaar, met stroken ertussen om een venster een eigen dia te geven */
+  .bladen.dias { width: 338.67mm; gap: 5mm; }
+  .dia { box-shadow: 0 1mm 6mm rgba(20, 30, 45, .18); }
+  .dia.te-vol { box-shadow: 0 0 0 1.2mm var(--verbod); }
+  .titeldia, .dia-kop { cursor: pointer; }
+  .dia .venster { cursor: grab; }
+  .titeldia:hover .titeldia-titel, .dia .venster:hover { outline: .6mm solid rgba(109, 42, 108, .45); outline-offset: .8mm; }
+  .dia .venster.gesleept { opacity: .35; }
+  .dia .venster.voeg-voor { box-shadow: -3mm 0 0 var(--paars); }
+  .dia .venster.voeg-na { box-shadow: 3mm 0 0 var(--paars); }
+  .bladen.sleept .dia.doel { box-shadow: 0 0 0 1.2mm var(--paars); }
+  .bladen.sleept .venster:hover { outline: none; }
+  .dia-tussen {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 11mm;
+    border: .6mm dashed transparent;
+    border-radius: 3mm;
+    font-size: 12pt;
+    font-weight: 600;
+    color: transparent;
+  }
+  .bladen.sleept .dia-tussen { border-color: #aab1bb; color: var(--inkt-zacht); }
+  .bladen.sleept .dia-tussen.doel { border-color: var(--paars); background: rgba(109, 42, 108, .08); color: var(--paars); }
+
+  .dia-uitleg {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    max-width: 860px;
+    margin: 0 auto 16px;
+    padding: 8px 10px 8px 14px;
+    background: #fff;
+    border: 1px solid var(--lijn);
+    border-radius: 8px;
+    color: var(--inkt-zacht);
+    font-size: 13px;
+  }
+  .dia-uitleg[hidden] { display: none; }
+  .dia-uitleg p { flex: 1; margin: 0; }
+  .dia-uitleg button {
+    padding: 5px 10px;
+    background: #fff;
+    border: 1px solid var(--lijn);
+    border-radius: 6px;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .dia-uitleg button:hover:not(:disabled) { background: var(--vlak); }
   .kop-titel h1:empty::before { content: "Titel van de kaart"; color: #b9bfc8; }
   .venster-kop h2:empty::before { content: "Titel van het venster"; opacity: .55; }
 
@@ -307,9 +365,9 @@
 
 @media print {
   body { background: #fff; }
-  .werkbalk, .paneel, .melding, .zoom, dialog { display: none !important; }
+  .werkbalk, .paneel, .melding, .zoom, dialog, .dia-uitleg, .dia-tussen { display: none !important; }
   .blad-kader { width: auto !important; height: auto !important; }
   .bladen { transform: none !important; }
-  .blad { break-after: page; }
-  .blad:last-child { break-after: avoid; }
+  .blad, .dia { break-after: page; }
+  .blad:last-of-type, .dia:last-of-type { break-after: avoid; }
 }

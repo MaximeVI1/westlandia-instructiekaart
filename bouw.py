@@ -6,6 +6,7 @@ Gebruik:
     python3 bouw.py --pdf                        # maakt ook een pdf naast elke kaart in kaarten/
     python3 bouw.py --pdf kaarten/A.json ...     # maakt een pdf naast elk opgegeven kaartbestand
     python3 bouw.py --zip                        # maakt Instructiekaart-editor.zip om door te geven
+    python3 bouw.py --web                        # maakt de map web/ voor de website (installeerbaar als app)
 
 Alleen de standaardbibliotheek van Python is nodig; voor --pdf ook Chrome of Edge.
 """
@@ -23,6 +24,14 @@ import zipfile
 ROOT = pathlib.Path(__file__).resolve().parent
 SRC = ROOT / "src"
 ZIPNAAM = "Instructiekaart-editor"
+
+# Alleen in de webversie: wat de browser nodig heeft om de editor als app te installeren.
+# De pagina hoeft niet in zoekmachines te staan.
+WEBKOP = """<meta name="robots" content="noindex">
+<meta name="theme-color" content="#ffffff">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icoon.svg">
+<link rel="apple-touch-icon" href="icoon-192.png">"""
 
 BROWSERS = [
     "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
@@ -91,13 +100,14 @@ def lees(*namen: str) -> str:
     return "\n".join((SRC / naam).read_text(encoding="utf-8") for naam in namen)
 
 
-def bouw_pagina(kaart=None) -> str:
+def bouw_pagina(kaart=None, web=False) -> str:
     """Zet opmaak, code, pictogrammen en figuren samen in de pagina.
 
     Zonder kaart start de editor met een lege kaart. Met een kaart toont hij die meteen;
-    dat dient om er een pdf van te maken."""
+    dat dient om er een pdf van te maken. Met web=True is het de pagina voor de website."""
     pagina = (SRC / "pagina.html").read_text(encoding="utf-8")
     delen = {
+        "<!--__WEB__-->": WEBKOP if web else "",
         "/*__CSS__*/": lees("kaart.css", "editor.css"),
         "/*__JS__*/": lees("kaart.js", "import.js", "editor.js"),
         "__BIBLIOTHEEK__": als_json(bibliotheek()),
@@ -145,6 +155,16 @@ def maak_zip() -> None:
     print(f"{doel.name}  ({doel.stat().st_size / 1024:.0f} kB)")
 
 
+def maak_web() -> None:
+    """Maakt de map web/ voor de website: de editor als index.html, met het manifest, de iconen en
+    de dienst op de achtergrond waarmee een browser hem als app installeert en zonder internet opent."""
+    doel = ROOT / "web"
+    shutil.rmtree(doel, ignore_errors=True)
+    shutil.copytree(SRC / "web", doel, ignore=shutil.ignore_patterns(".*"))
+    (doel / "index.html").write_text(bouw_pagina(web=True), encoding="utf-8")
+    print(f"web/  ({sum(p.stat().st_size for p in doel.iterdir()) / 1024:.0f} kB)")
+
+
 def main() -> None:
     kaarten = [pathlib.Path(a).resolve() for a in sys.argv[1:] if not a.startswith("--")]
     uit = ROOT / "instructiekaart.html"
@@ -160,6 +180,8 @@ def main() -> None:
                 maak_pdf(html, (pad / "kaart.pdf") if pad.is_dir() else pad.with_suffix(".pdf"))
     if "--zip" in sys.argv:
         maak_zip()
+    if "--web" in sys.argv:
+        maak_web()
 
 
 if __name__ == "__main__":

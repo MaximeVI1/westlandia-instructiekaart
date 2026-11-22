@@ -1082,10 +1082,37 @@
     window.print();
   }
 
+  /* ---------- als app installeren ---------- */
+
+  /* Alleen de webversie (bouw.py --web) heeft een manifest. Daar biedt Edge of Chrome aan om de
+     editor als app te installeren; de knop verschijnt pas wanneer de browser dat aanbod doet. */
+  let aanbod = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    aanbod = e;
+    actieKnop('installeren').hidden = false;
+  });
+  window.addEventListener('appinstalled', () => {
+    aanbod = null;
+    actieKnop('installeren').hidden = true;
+    meld('De editor staat nu als app op deze computer');
+  });
+  function installeren() {
+    if (!aanbod) return;
+    const vraag = aanbod;
+    aanbod = null;   // een aanbod kan maar één keer getoond worden; weigert de gebruiker, dan komt er later een nieuw
+    actieKnop('installeren').hidden = true;
+    vraag.prompt();
+  }
+  /* De dienst op de achtergrond bewaart de editor, zodat hij ook zonder internet opent. */
+  if (document.querySelector('link[rel="manifest"]') && 'serviceWorker' in navigator && location.protocol.startsWith('http')) {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  }
+
   /* ---------- gebeurtenissen ---------- */
 
   const ACTIES = {
-    nieuw, openen, importeren, ongedaan, opnieuw, afdrukken,
+    nieuw, openen, importeren, ongedaan, opnieuw, afdrukken, installeren,
     opslaan: () => opslaan(false),
     'opslaan-als': () => opslaan(true),
   };

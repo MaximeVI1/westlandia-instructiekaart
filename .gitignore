@@ -1,6 +1,7 @@
-# Gebouwde bestanden: maak ze opnieuw met `python3 bouw.py --zip`
+# Gebouwde bestanden: maak ze opnieuw met `python3 bouw.py --zip --web`
 /instructiekaart.html
 /Instructiekaart-editor.zip
+/web/
 
 # Tijdelijke bestanden
 .DS_Store

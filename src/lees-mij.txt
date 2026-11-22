@@ -11,6 +11,9 @@ ZO BEGIN JE
 Er is geen installatie en geen internet nodig. Er wordt niets verstuurd:
 alles blijft op je eigen computer.
 
+Dezelfde editor staat ook online, altijd in de laatste versie:
+https://maximevi1.github.io/westlandia-instructiekaart/
+
 
 WAT DE KNOPPEN DOEN
 

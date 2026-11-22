@@ -1,0 +1,6 @@
+Mulberry Symbols, copyright Steve Lee, licentie Creative Commons Naamsvermelding-GelijkDelen 4.0 (CC BY-SA 4.0).
+Bron: https://mulberrysymbols.org  -  https://github.com/mulberrysymbols/mulberry-symbols  (zie LICENSE.txt)
+
+De bestanden zijn ongewijzigd overgenomen; alleen de bestandsnaam is aangepast ("origineel" in index.json is de naam bij Mulberry).
+Wie een figuur gebruikt, moet de bron vermelden; de editor zet die vermelding vanzelf onderaan de kaart.
+Een figuur toevoegen: zet het svg-bestand in deze map, voeg een regel toe aan index.json en voer python3 bouw.py uit.

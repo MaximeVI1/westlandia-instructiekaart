@@ -1,0 +1,82 @@
+{
+  "schema": 1,
+  "kop": {
+    "soort": "Veiligheidsinstructiekaart",
+    "titel": "Gevaren van ontstopper en javel",
+    "code": "P051A_IN_320",
+    "versie": "001",
+    "datum": "2026-11-20",
+    "auteur": "JAMY",
+    "eigenaar": "BDSC",
+    "goedgekeurdDoor": "KSMN",
+    "geldigVanaf": "2026-11-20",
+    "geldigVoor": "McBride",
+    "toepassingsgebied": "",
+    "doelstelling": "Kennis van de veiligheidsinstructies enclave McBride Household"
+  },
+  "vensters": [
+    {
+      "titel": "Persoonlijke beschermingsmiddelen",
+      "soort": "gebod",
+      "breedte": "vol",
+      "type": "pictogrammen",
+      "inleiding": "Draagplicht",
+      "items": [
+        { "picto": "M008", "label": "Veiligheidsschoenen" },
+        { "picto": "M009", "label": "Chemiebestendige handschoenen", "noot": "Wegens risico op brandwonden" },
+        { "picto": "M010", "label": "Werkkledij" },
+        { "picto": "M013", "label": "Gelaatsmasker" },
+        { "picto": "M026", "label": "Schort" }
+      ],
+      "illustratie": { "src": "figuur-pbm.png", "alt": "Medewerker met gelaatsmasker, handschoenen en schort" }
+    },
+    {
+      "titel": "Aandachtspunten",
+      "soort": "gevaar",
+      "breedte": "links",
+      "type": "punten",
+      "items": [
+        {
+          "tekst": "Herken chemische producten",
+          "beelden": [
+            { "src": "fles-1.jpg", "alt": "Fles ontstopper", "grootte": "groot" },
+            { "src": "fles-2.jpg", "alt": "Fles ontstopper", "grootte": "groot" },
+            { "picto": "GHS05", "grootte": "middel" }
+          ]
+        },
+        {
+          "tekst": "Kunnen bij contact met de huid ernstige brandwonden veroorzaken",
+          "beelden": [
+            { "src": "brandwonde-hand.jpg", "alt": "Brandwonden op een hand", "grootte": "klein" },
+            { "src": "brandwonde-oog.jpg", "alt": "Brandwonde aan een oog", "grootte": "klein" }
+          ]
+        }
+      ]
+    },
+    {
+      "titel": "EHBO",
+      "soort": "ehbo",
+      "breedte": "rechts",
+      "type": "punten",
+      "items": [
+        {
+          "tekst": "Spoel onmiddellijk met de blauwe oogspoelfles",
+          "beelden": [
+            { "src": "oogspoelfles.png", "alt": "Blauwe oogspoelfles", "grootte": "groot" },
+            { "picto": "E011", "grootte": "middel" }
+          ]
+        }
+      ]
+    },
+    {
+      "titel": "Algemeen",
+      "soort": "info",
+      "breedte": "rechts",
+      "type": "punten",
+      "items": [
+        { "tekst": "Raadpleeg ook de algemene veiligheidsinstructiekaarten" },
+        { "tekst": "Raadpleeg ook de specifieke instructiekaarten (zie overzichtstabel)" }
+      ]
+    }
+  ]
+}

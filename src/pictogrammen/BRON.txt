@@ -1,0 +1,6 @@
+De pictogrammen (ISO 7010 en GHS) komen van Wikimedia Commons en zijn daar als publiek domein aangeboden.
+https://commons.wikimedia.org/wiki/Category:ISO_7010_safety_signs_(vector_drawings)
+https://commons.wikimedia.org/wiki/Category:GHS_pictograms
+
+Een pictogram toevoegen: zet het svg-bestand in deze map, voeg een regel toe aan index.json
+(code, naam, soort: gebod / gevaar / verbod / ghs / ehbo / brand) en voer daarna python3 bouw.py uit.

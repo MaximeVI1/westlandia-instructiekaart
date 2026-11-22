@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Instructiekaart</title>
+<style>
+/*__CSS__*/
+</style>
+</head>
+<body>
+<div class="app">
+  <header class="werkbalk">
+    <strong class="merk">Instructiekaart</strong>
+    <button type="button" data-actie="nieuw">Nieuw</button>
+    <button type="button" data-actie="openen" title="Een kaart openen die je eerder opsloeg (Ctrl+O)">Openen</button>
+    <button type="button" data-actie="importeren" title="Een bestaande Word-kaart (.docx) inlezen en omzetten">Word importeren</button>
+    <button type="button" data-actie="opslaan" title="Opslaan (Ctrl+S)">Opslaan</button>
+    <button type="button" data-actie="opslaan-als" title="Opslaan onder een andere naam">Opslaan als</button>
+    <span class="scheiding"></span>
+    <button type="button" data-actie="ongedaan" title="Ongedaan maken (Ctrl+Z)" aria-label="Ongedaan maken"><svg class="teken" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6 4 11l5 5"/><path d="M4 11h10a5 5 0 0 1 0 10h-2"/></svg></button>
+    <button type="button" data-actie="opnieuw" title="Opnieuw doen (Ctrl+Y)" aria-label="Opnieuw doen"><svg class="teken" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m15 6 5 5-5 5"/><path d="M20 11H10a5 5 0 0 0 0 10h2"/></svg></button>
+    <span id="werkbalk-naam"></span>
+    <span id="werkbalk-paginas" hidden></span>
+    <span id="werkbalk-melding" hidden>Een venster is te groot voor één pagina</span>
+    <button type="button" class="hoofd" data-actie="afdrukken" title="Afdrukken of opslaan als pdf (Ctrl+P)">Afdrukken / pdf</button>
+  </header>
+  <div class="werkvlak">
+    <aside class="paneel" id="formulier" aria-label="Kaart bewerken"></aside>
+    <main class="voorbeeld" id="voorbeeld" aria-label="Voorbeeld van de kaart">
+      <div class="blad-kader" id="blad-kader"><div class="bladen" id="bladen"></div></div>
+      <div class="zoom" role="group" aria-label="Grootte van het voorbeeld">
+        <button type="button" data-zoom="breedte">Groot</button>
+        <button type="button" data-zoom="blad">Hele blad</button>
+      </div>
+    </main>
+  </div>
+</div>
+
+<dialog id="picto-kiezer" aria-labelledby="picto-titel">
+  <div class="kiezer-kop">
+    <strong id="picto-titel">Pictogram kiezen</strong>
+    <input type="search" id="picto-zoek" placeholder="Zoeken, bv. handschoenen" autocomplete="off">
+    <button type="button" id="picto-sluiten" aria-label="Sluiten"><svg class="teken" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+  </div>
+  <div class="kiezer-tabs" id="picto-tabs"></div>
+  <div class="kiezer-raster" id="picto-raster"></div>
+  <p class="kiezer-noot" id="picto-noot" hidden></p>
+</dialog>
+
+<dialog id="opslaan-venster" aria-labelledby="opslaan-titel">
+  <form method="dialog" id="opslaan-formulier">
+    <strong id="opslaan-titel">Opslaan als</strong>
+    <label for="opslaan-naam">Naam van het bestand</label>
+    <div class="naam-rij"><input type="text" id="opslaan-naam" autocomplete="off" spellcheck="false"><span>.json</span></div>
+    <p>Deze browser kan niet zelf een map kiezen of een bestaand bestand overschrijven: het bestand wordt gedownload en komt bij je downloads. Sla je dezelfde naam nog eens op, dan zet de browser er een tweede bestand naast.</p>
+    <p>In Chrome of Edge kies je zelf de map en schrijft Opslaan telkens in hetzelfde bestand.</p>
+    <div class="venster-knoppen">
+      <button type="button" id="opslaan-annuleer">Annuleren</button>
+      <button type="submit" value="ok" class="hoofd">Downloaden</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="open-venster" aria-labelledby="open-titel">
+  <strong id="open-titel">Kaart openen</strong>
+  <p>Kaarten die je in deze browser al opsloeg of opende. Staat je kaart er niet bij, kies dan Bladeren.</p>
+  <ul id="open-lijst"></ul>
+  <div class="venster-knoppen">
+    <button type="button" id="open-bladeren">Bladeren op deze computer …</button>
+    <button type="button" id="open-annuleer">Annuleren</button>
+  </div>
+</dialog>
+
+<dialog id="verslag-venster" aria-labelledby="verslag-titel">
+  <form method="dialog" id="verslag-formulier">
+    <strong id="verslag-titel">Geïmporteerd</strong>
+    <p id="verslag-samenvatting"></p>
+    <ul id="verslag-lijst"></ul>
+    <p>De import is een eerste aanzet. Kijk de kaart na, pas aan wat nodig is en sla ze daarna op.</p>
+    <div class="venster-knoppen"><button type="submit" class="hoofd">Kaart nakijken</button></div>
+  </form>
+</dialog>
+
+<input type="file" id="bestand-kiezen" accept=".json,application/json" hidden>
+<input type="file" id="docx-kiezen" accept=".docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document" hidden>
+<div class="melding" id="melding" role="status" hidden></div>
+
+<script type="application/json" id="bibliotheek">__BIBLIOTHEEK__</script>
+<script type="application/json" id="kaart">__KAART__</script>
+<script>
+/*__JS__*/
+</script>
+</body>
+</html>

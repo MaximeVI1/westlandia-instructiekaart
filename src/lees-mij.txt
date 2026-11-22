@@ -1,0 +1,57 @@
+INSTRUCTIEKAART-EDITOR VAN WESTLANDIA
+=====================================
+
+ZO BEGIN JE
+
+1. Pak deze map eerst uit: rechtsklik op het zip-bestand en kies "Alles uitpakken".
+2. Dubbelklik op "Instructiekaart-editor.html".
+   De editor opent in je browser met een lege kaart.
+   Gebruik bij voorkeur Edge of Chrome.
+
+Er is geen installatie en geen internet nodig. Er wordt niets verstuurd:
+alles blijft op je eigen computer.
+
+
+WAT DE KNOPPEN DOEN
+
+Nieuw             Een lege kaart met de vaste vensters.
+Openen            Een kaart verder bewerken. Je ziet eerst de kaarten die je al
+                  opsloeg; met "Bladeren" zoek je elders op de computer.
+Word importeren   Een bestaande Word-kaart (.docx) omzetten naar een kaart.
+Opslaan           Bewaart de kaart als bestand (.json). Dat bestand is je kaart.
+Opslaan als       Bewaart de kaart onder een andere naam, bv. voor een nieuwe kaart
+                  op basis van een bestaande.
+Afdrukken / pdf   Drukt de kaart af. Kies in het afdrukvenster "Opslaan als pdf"
+                  om een pdf te maken.
+
+Links pas je de kaart aan, rechts zie je meteen het resultaat.
+Klik op een onderdeel van het blad om het links te openen.
+
+
+GOED OM TE WETEN
+
+- Sla op voor je het venster sluit. De lijst bij "Openen" toont alleen kaarten
+  die je opgeslagen of geopend hebt.
+- Een kaartbestand (.json) open je via de knop "Openen", niet door erop te
+  dubbelklikken.
+- In Edge en Chrome kies je zelf de map en schrijft "Opslaan" telkens in
+  hetzelfde bestand. In Firefox en Safari wordt het bestand gedownload.
+- Bewaar de kaartbestanden op de gedeelde schijf, zodat collega's ze ook
+  kunnen openen.
+- Past de inhoud niet op één blad, dan loopt de kaart vanzelf door op een
+  tweede pagina.
+
+
+WAT ER IN DEZE MAP ZIT
+
+Instructiekaart-editor.html   De editor. Dit is het enige bestand dat je nodig hebt.
+Kaarten                       Een voorbeeldkaart (.json en .pdf) om mee te beginnen.
+Broncode                      Alleen nodig om de editor zelf aan te passen.
+
+
+BRONNEN
+
+Pictogrammen: ISO 7010 en GHS, via Wikimedia Commons (publiek domein).
+Figuren: Mulberry Symbols, copyright Steve Lee, licentie CC BY-SA 4.0,
+mulberrysymbols.org. De bronvermelding komt vanzelf onderaan elke kaart
+die zo'n figuur gebruikt.

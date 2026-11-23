@@ -63,7 +63,10 @@
     { sleutel: 'geldigVoor', naam: 'Geldig voor' },
     { sleutel: 'toepassingsgebied', naam: 'Toepassingsgebied', breed: true },
     { sleutel: 'doelstelling', naam: 'Doelstelling', breed: true, rijen: 2 },
+    { sleutel: 'locatie', naam: 'Map op de schijf', breed: true, uitleg: 'Staat onderaan elke pagina, met de naam van het kaartbestand erachter.' },
   ];
+  /* De map waar de instructiekaarten van Westlandia staan. Een kaart zonder map krijgt deze. */
+  const STANDAARDMAP = 'V:\\Procesmodel\\P050-Veiligheid Milieu Preventie Kwaliteit\\P051-Preventie\\P051A Onthaal & opleiding';
   const BESTANDSTYPES = [{ description: 'Instructiekaart', accept: { 'application/json': ['.json'] } }];
 
   const formulier = document.getElementById('formulier');
@@ -154,6 +157,9 @@
       const w = tekst(bron.kop[v.sleutel]);
       kop[v.sleutel] = v.type === 'date' && !/^\d{4}-\d{2}-\d{2}$/.test(w) ? '' : w;
     }
+    /* Kaarten van voor er een map was (en kaarten uit Word) krijgen de standaardmap. Wie de map
+       bewust leegmaakt, houdt ze leeg. */
+    if (!('locatie' in bron.kop)) kop.locatie = STANDAARDMAP;
     const vensters = bron.vensters.map(normVenster);
     const gezien = new Set();
     for (const v of vensters) {
@@ -293,7 +299,7 @@
       document.title = naam + ' – presentatie';   // ook de voorgestelde naam van de pdf
       automatischKnop.disabled = !staat.kaart.presentatie;
     } else {
-      const uit = K.toon(staat.kaart, bib, bladen);
+      const uit = K.toon(staat.kaart, bib, bladen, { bestand: staat.naam || voorgesteldeNaam() });
       paginasEl.textContent = uit.paginas + ' pagina’s';
       paginasEl.hidden = uit.paginas < 2;
       document.title = naam;
@@ -433,8 +439,9 @@
     return b;
   }
 
-  function veld(naam, invoer, breed) {
-    return el('label', { class: 'veld' + (breed ? ' breed' : '') }, el('span', { text: naam }), invoer);
+  function veld(naam, invoer, breed, uitleg) {
+    return el('label', { class: 'veld' + (breed ? ' breed' : '') }, el('span', { text: naam }), invoer,
+      uitleg && el('small', { class: 'tip', text: uitleg }));
   }
 
   function groep(naam, inhoud) {
@@ -505,7 +512,7 @@
     const titel = el('span', { class: 'blok-titel' }, el('span', { class: 'naam', text: 'Kop van de kaart' }));
     return blok('kop', titel, null, () =>
       el('div', { class: 'velden-raster' },
-        ...KOPVELDEN.map((v) => veld(v.naam, tekstInvoer(staat.kaart.kop, v.sleutel, v), v.breed))));
+        ...KOPVELDEN.map((v) => veld(v.naam, tekstInvoer(staat.kaart.kop, v.sleutel, v), v.breed, v.uitleg))));
   }
 
   function vensterBlok(v, i) {
@@ -1134,6 +1141,7 @@
     staat.handvat = handvat;
     staat.gewijzigd = false;
     werkbalk();
+    planVoorbeeld();   // de bestandsnaam onderaan de kaart
     meld(boodschap);
     onthoud();
   }

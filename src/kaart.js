@@ -97,13 +97,24 @@ window.Instructiekaart = (function () {
           el('span', { text: kop.doelstelling }))));
   }
 
-  function tekenVoet(kop, nummer, totaal, vermelding, woord) {
+  function tekenVoet(kop, nummer, totaal, vermelding, woord, pad) {
     const kenmerk = ['Westlandia', kop.code, kop.versie && 'versie ' + kop.versie, datum(kop.datum)]
       .filter(Boolean).join(' · ');
+    /* Met een pad staat dat links, zoals op de oude Word-kaart; code, versie en datum staan al in de kop. */
     return el('footer', { class: 'voet' },
-      el('span', { text: kenmerk }),
+      pad ? el('span', { class: 'voet-pad', text: pad }) : el('span', { text: kenmerk }),
       vermelding && el('span', { class: 'voet-bron', text: 'Figuren: ' + vermelding }),
       el('span', { text: (woord || 'Pagina') + ' ' + nummer + '/' + totaal }));
+  }
+
+  /* Waar de kaart bewaard wordt, zoals vroeger het bestandspad onderaan de Word-kaart: de map uit
+     de kop met de bestandsnaam erachter. Staat er in de map al een volledig pad met een bestandsnaam,
+     dan blijft dat zo. Zonder map: geen pad. */
+  function bestandspad(kop, bestand) {
+    const map = String(kop.locatie || '').trim().replace(/[\\/]+$/, '');
+    if (!map) return '';
+    if (!bestand || /\.[a-z0-9]{2,5}$/i.test(map)) return map;
+    return map + (map.includes('\\') || !map.includes('/') ? '\\' : '/') + bestand;
   }
 
   /* ---------- inhoud van een venster ---------- */
@@ -310,10 +321,12 @@ window.Instructiekaart = (function () {
     }));
   }
 
-  /* Tekent de kaart in `doel` (een element dat in de pagina staat), op zoveel bladen als nodig. */
-  function toon(kaart, bibliotheek, doel) {
+  /* Tekent de kaart in `doel` (een element dat in de pagina staat), op zoveel bladen als nodig.
+     opties.bestand: de naam van het kaartbestand, voor het pad onderaan. */
+  function toon(kaart, bibliotheek, doel, opties) {
     bib = bibliotheek;
     const kop = kaart.kop || {};
+    const pad = bestandspad(kop, opties && opties.bestand);
     const rijen = groepeer(kaart.vensters);
 
     /* 1. Alles één keer tekenen op een onzichtbaar blad en opmeten. */
@@ -333,7 +346,7 @@ window.Instructiekaart = (function () {
     const kopVol = tekenKop(kop, false);
     const kopKort = tekenKop(kop, true);
     const vermelding = vermeldingen(kaart).join(' · ');
-    const voet = tekenVoet(kop, 1, 1, vermelding);
+    const voet = tekenVoet(kop, 1, 1, vermelding, '', pad);
     const lat = el('div', { style: 'height:100mm;flex:none' });
     const meetblad = el('article', { class: 'blad meet' }, kopVol, kopKort, meetVensters, voet, lat);
     document.body.append(meetblad);
@@ -358,7 +371,7 @@ window.Instructiekaart = (function () {
         tekenKop(kop, i > 0),
         el('div', { class: 'vensters' }, ...blokken.map((blok) =>
           (blok.vol ? elementen.get(blok.vol) : el('div', { class: 'kolommen' }, kolom(blok.links), kolom(blok.rechts))))),
-        tekenVoet(kop, i + 1, paginas.length, vermelding))));
+        tekenVoet(kop, i + 1, paginas.length, vermelding, '', pad))));
     return { paginas: paginas.length };
   }
 
@@ -539,5 +552,5 @@ window.Instructiekaart = (function () {
     };
   }
 
-  return { toon, toonPresentatie, meet, ontbrekendeMaten, el, datum };
+  return { toon, toonPresentatie, meet, ontbrekendeMaten, el, datum, bestandspad };
 })();

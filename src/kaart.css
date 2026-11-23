@@ -349,3 +349,6 @@ body {
 .titeldia-doel { max-width: 250mm; margin: 5mm 0 0; font-size: 15pt; line-height: 1.35; color: var(--inkt-zacht); }
 .titeldia-meta { gap: 0; }
 .titeldia-meta > div { padding: 0 6mm; }
+
+/* het pad van het bestand neemt de plaats die er is; is het te lang, dan loopt het door op een tweede regel */
+.voet-pad { flex: 1 1 0; min-width: 0; overflow-wrap: anywhere; }

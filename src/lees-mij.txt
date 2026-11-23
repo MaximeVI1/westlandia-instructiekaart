@@ -50,6 +50,9 @@ dia.
 
 GOED OM TE WETEN
 
+- Onderaan elke pagina staat waar de kaart bewaard wordt: de map uit de kop
+  ("Map op de schijf") met de naam van het kaartbestand erachter. Sla de kaart
+  dus op in die map.
 - Sla op voor je het venster sluit. De lijst bij "Openen" toont alleen kaarten
   die je opgeslagen of geopend hebt.
 - Een kaartbestand (.json) open je via de knop "Openen", niet door erop te
